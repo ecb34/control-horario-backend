@@ -47,23 +47,49 @@ export default {
   },
   methods(self) {
     return {
-      async hasCheckedInToday(req, userId) {
+      async isUserWorkingNow(req, userId) {
+        const checkIns = await self.getTodayCheckIns(req, userId);
+        const checkOuts = await self.getTodayCheckOuts(req, userId);
+
+        return checkIns.length > checkOuts.length;
+      },
+      async getTodayCheckIns(req, userId) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
 
-        const todayEntry = await self.find(req, {
+        const todayCheckIns = await self.find(req, {
           'userIds.0': userId,
           timestamp: {
             $gte: startOfDay.toISOString(),
             $lte: endOfDay.toISOString()
           },
           eventType: 'clockIn'
-        }).toObject();
+        })
+          .toArray();
 
-        return !!todayEntry;
+        return todayCheckIns;
+      },
+      async getTodayCheckOuts(req, userId) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const todayCheckouts = await self.find(req, {
+          'userIds.0': userId,
+          timestamp: {
+            $gte: startOfDay.toISOString(),
+            $lte: endOfDay.toISOString()
+          },
+          eventType: 'clockOut'
+        })
+          .toArray();
+
+        return todayCheckouts;
       }
     };
   },
@@ -79,14 +105,37 @@ export default {
             throw self.apos.error('invalid');
           }
 
-          const hasCheckedIn = await self.hasCheckedInToday(req, employeeId);
+          const isUserWorkingNow = await self.isUserWorkingNow(req, employeeId);
 
-          const timeEntry = self.newInstance();
-          timeEntry.timestamp = new Date().toISOString();
-          timeEntry.eventType = eventType;
-          timeEntry.userIds = [ employeeId ];
+          if (!isUserWorkingNow) {
+            const timeEntry = self.newInstance();
+            timeEntry.timestamp = new Date().toISOString();
+            timeEntry.eventType = 'clockIn';
+            timeEntry.userIds = [ employeeId ];
 
-          await self.insert(req, timeEntry, { permissions: false });
+            await self.insert(req, timeEntry, { permissions: false });
+
+            return {
+              status: 'workStarted',
+              fullName: `${user.firstName} ${user.lastName}`
+            };
+          }
+
+          if (isUserWorkingNow && [ 'clockOut', 'breakStart', 'breakEnd' ].includes(eventType)) {
+            const timeEntry = self.newInstance();
+            timeEntry.timestamp = new Date().toISOString();
+            timeEntry.eventType = eventType;
+            timeEntry.userIds = [ employeeId ];
+
+            await self.insert(req, timeEntry, { permissions: false });
+
+            return {
+              status: 'entryRecorded',
+              fullName: `${user.firstName} ${user.lastName}`
+            };
+          }
+
+          throw self.apos.error('invalid event type');
         }
       }
     };
