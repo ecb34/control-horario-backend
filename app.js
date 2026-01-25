@@ -38,6 +38,8 @@ apostrophe({
     '@apostrophecms/user-page': {},
     'time-entry': {},
     'qr-page': {},
+    'time-tracking-page': {},
+    'fichajes-resumen-page': {},
     '@apostrophecms/import-export': {}
   }
 });

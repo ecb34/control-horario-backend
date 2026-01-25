@@ -14,6 +14,14 @@ export default {
         label: 'QR Scanner'
       },
       {
+        name: 'time-tracking-page',
+        label: 'Time Tracking'
+      },
+      {
+        name: 'fichajes-resumen-page',
+        label: 'Resumen de Fichajes'
+      },
+      {
         name: '@apostrophecms/user-page',
         label: 'Users'
       }
