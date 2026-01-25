@@ -62,7 +62,7 @@
     <!-- Actions Section -->
     <section id="actions-wrapper" style="display:none;">
       <h2 class="text-xl font-semibold text-foreground mb-4">Acciones</h2>
-      <div id="actions-wrapper" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Clock Out Button -->
         <button 
           data-action="clockOut"
@@ -91,6 +91,27 @@
           <p class="text-sm text-muted-foreground">Comenzar descanso</p>
         </button>
 
+        <!-- Break End Button -->
+        <button 
+          data-action="breakEnd"
+          class="group relative bg-card hover:bg-success/10 border border-border hover:border-success/50 rounded-xl p-5 transition-all duration-200 text-left"
+        >
+          <div class="w-12 h-12 rounded-xl bg-success/10 group-hover:bg-success/20 flex items-center justify-center mb-3 transition-colors">
+            <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-medium text-foreground mb-1">Fin Pausa</h3>
+          <p class="text-sm text-muted-foreground">Terminar descanso</p>
+        </button>
+      </div>
+    </section>
+
+    <!-- BreakActions Section --> 
+    <section id="break-actions-wrapper" style="display:none;">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Estás en un descanso, quieres terminar tu descanso?</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Break End Button -->
         <button 
           data-action="breakEnd"

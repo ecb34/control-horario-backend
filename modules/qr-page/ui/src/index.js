@@ -52,7 +52,8 @@ export default () => {
           $('#actions-wrapper').show();
         } else if (response.status === 'breakInProgress') {
           $('#scanner-wrapper').hide();
-          $('#actions-wrapper').show();
+          $('#break-actions-wrapper').show();
+          $('#actions-wrapper').hide();
         } else if (response.status === 'entryRecorded') {
           Swal.fire({
             title: `Registro exitoso, ${response.fullName}.`,
@@ -61,6 +62,8 @@ export default () => {
           });
           $('#scanner-wrapper').show();
           $('#actions-wrapper').hide();
+          $('#break-actions-wrapper').hide();
+          employeeId = null;
         } else {
           Swal.fire({
             title: 'Error!',
@@ -103,11 +106,12 @@ export default () => {
         if (response.status === 'entryRecorded') {
           Swal.fire({
             title: `Registro exitoso, ${response.fullName}.`,
-            text: 'Has registrado tu entrada.',
+            text: 'Has registrado tu jornada correctamente.',
             icon: 'success'
           });
           $('#scanner-wrapper').show();
           $('#actions-wrapper').hide();
+          $('#break-actions-wrapper').hide();
           employeeId = null;
         } else {
           Swal.fire({
