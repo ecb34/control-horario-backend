@@ -1,33 +1,119 @@
 {% extends "layout.html" %}
 
+{% block bodyClass %}bg-background text-foreground min-h-screen{% endblock bodyClass %}
 {% block main %}
-  <div class="container py-5" data-qr-page>
-  <h3 class="mb-4">Escanea tu código QR para fichar</h3>
-
-  <div class="scanner" id="scanner-wrapper">
-    <div class="container">
-      <div class="row">
-        <div class="col-12 ta-center">
-          <div id="qr-reader" style="height: 300px; width: 300px"></div>
-        </div>
+<div class="min-h-screen flex flex-col" data-qr-page>
+  <!-- Header -->
+  <header class="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+    <div class="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-semibold text-foreground">Control de Fichaje</h1>
+        <p class="text-sm text-muted-foreground">Sistema de registro horario</p>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="actions" id="actions-wrapper" style="display:none;">
-    <div class="container">
-      <div class="row">
-        <div class="col-4 ta-center">
-          <button data-action="clockOut" class="btn btn-primary">Fichar Salida</button>
-        </div>
-        <div class="col-4 ta-center">
-          <button data-action="breakStart" class="btn btn-primary">Fichar Descanso</button>
-        </div>
-        <div class="col-4 ta-center">
-          <button data-action="breakEnd" class="btn btn-primary">Fichar Terminar Descanso</button>
+  <!-- Main Content -->
+  <main class="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
+    <!-- Scanner Section -->
+    <section class="mb-8" id="scanner-wrapper">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-foreground">Escanear QR</h2>
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
+          <span class="relative flex h-2 w-2">
+            <span class="pulse-ring absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+          </span>
+          Escaner activo
         </div>
       </div>
-    </div>
-  </div>
+
+      <!-- QR Reader Container -->
+      <div class="relative bg-card rounded-2xl border border-border overflow-hidden">
+        <div id="qr-reader" class="aspect-square w-full bg-secondary/50 relative">
+          <!-- Scanner Overlay -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="relative w-3/4 h-3/4">
+              <!-- Corner markers -->
+              <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary rounded-tl-lg"></div>
+              <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary rounded-tr-lg"></div>
+              <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary rounded-bl-lg"></div>
+              <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary rounded-br-lg"></div>
+              <!-- Scan line -->
+              <div class="scan-line absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent"></div>
+            </div>
+          </div>
+          <!-- Placeholder text -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <p class="text-muted-foreground text-sm">Coloca el codigo QR aqui</p>
+          </div>
+        </div>
+        <p class="text-center text-sm text-muted-foreground py-4 border-t border-border">
+          Coloca el codigo QR del empleado frente a la camara
+        </p>
+      </div>
+    </section>
+
+    <!-- Actions Section -->
+    <section id="actions-wrapper" style="display:none;">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Acciones</h2>
+      <div id="actions-wrapper" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Clock Out Button -->
+        <button 
+          data-action="clockOut"
+          class="group relative bg-card hover:bg-destructive/10 border border-border hover:border-destructive/50 rounded-xl p-5 transition-all duration-200 text-left"
+        >
+          <div class="w-12 h-12 rounded-xl bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center mb-3 transition-colors">
+            <svg class="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </div>
+          <h3 class="font-medium text-foreground mb-1">Salida</h3>
+          <p class="text-sm text-muted-foreground">Registrar salida</p>
+        </button>
+
+        <!-- Break Start Button -->
+        <button 
+          data-action="breakStart"
+          class="group relative bg-card hover:bg-warning/10 border border-border hover:border-warning/50 rounded-xl p-5 transition-all duration-200 text-left"
+        >
+          <div class="w-12 h-12 rounded-xl bg-warning/10 group-hover:bg-warning/20 flex items-center justify-center mb-3 transition-colors">
+            <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-medium text-foreground mb-1">Inicio Pausa</h3>
+          <p class="text-sm text-muted-foreground">Comenzar descanso</p>
+        </button>
+
+        <!-- Break End Button -->
+        <button 
+          data-action="breakEnd"
+          class="group relative bg-card hover:bg-success/10 border border-border hover:border-success/50 rounded-xl p-5 transition-all duration-200 text-left"
+        >
+          <div class="w-12 h-12 rounded-xl bg-success/10 group-hover:bg-success/20 flex items-center justify-center mb-3 transition-colors">
+            <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-medium text-foreground mb-1">Fin Pausa</h3>
+          <p class="text-sm text-muted-foreground">Terminar descanso</p>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-border py-4">
+    <p class="text-center text-sm text-muted-foreground">
+      Sistema de Control Horario
+    </p>
+  </footer>
 </div>
 {% endblock %}

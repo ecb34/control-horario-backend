@@ -50,6 +50,9 @@ export default () => {
         } else if (response.status === 'workInProgress') {
           $('#scanner-wrapper').hide();
           $('#actions-wrapper').show();
+        } else if (response.status === 'breakInProgress') {
+          $('#scanner-wrapper').hide();
+          $('#actions-wrapper').show();
         } else if (response.status === 'entryRecorded') {
           Swal.fire({
             title: `Registro exitoso, ${response.fullName}.`,

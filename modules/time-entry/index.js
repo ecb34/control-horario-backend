@@ -120,6 +120,37 @@ export default {
           .toArray();
 
         return todayCheckouts;
+      },
+      async userIsInBreak(req, userId) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const breakStarts = await self.find(req, {
+          'userIds.0': userId,
+          timestamp: {
+            $gte: startOfDay.toISOString(),
+            $lte: endOfDay.toISOString()
+          },
+          eventType: 'breakStart'
+        })
+          .sort({ timestamp: -1 })
+          .toArray();
+
+        const breakEnds = await self.find(req, {
+          'userIds.0': userId,
+          timestamp: {
+            $gte: startOfDay.toISOString(),
+            $lte: endOfDay.toISOString()
+          },
+          eventType: 'breakEnd'
+        })
+          .sort({ timestamp: -1 })
+          .toArray();
+
+        return breakStarts.length > breakEnds.length;
       }
     };
   },
@@ -172,8 +203,9 @@ export default {
 
           if (isUserWorkingNow) {
             if (eventType == null) {
+              const userIsInBreak = await self.userIsInBreak(req, employeeId);
               return {
-                status: 'workInProgress',
+                status: userIsInBreak ? 'breakInProgress' : 'workInProgress',
                 fullName: user.title
               };
             } else if ([ 'clockOut', 'breakStart', 'breakEnd' ].includes(eventType)) {

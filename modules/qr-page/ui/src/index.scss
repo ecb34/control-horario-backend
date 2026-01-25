@@ -1,0 +1,14 @@
+@keyframes scan {
+      0%, 100% { top: 0; }
+      50% { top: calc(100% - 2px); }
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    .scan-line {
+      animation: scan 2s ease-in-out infinite;
+    }
+    .pulse-ring {
+      animation: pulse-ring 1.5s ease-out infinite;
+    }
