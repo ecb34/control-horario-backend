@@ -37,6 +37,7 @@ apostrophe({
     'default-page': {},
     '@apostrophecms/user-page': {},
     'time-entry': {},
-    'qr-page': {}
+    'qr-page': {},
+    '@apostrophecms/import-export': {}
   }
 });

@@ -1,29 +1,114 @@
 {% extends "layout.html" %}
 
-{% block main %}
-<div class="container py-5" data-users-page>
-  <h3 class="mb-4">Listado de empleados</h3>
+{% block bodyClass %}bg-background min-h-screen text-gray-100{% endblock bodyClass %}
 
-  <table class="table table-bordered align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>Nombre</th>
-        <th>Email</th>
-        <th>QR</th>
-      </tr>
-    </thead>
-    <tbody id="usersTable">
-      {% for user in data.pieces %}
-        <tr>
-          <td>{{ user.title }}</td>
-          <td>{{ user.email }}</td>
-          <td>
-            <div data-id="{{ user._id }}" data-qr></div>
-          </td>
-          <td><button class="btn btn-primary" data-print-qr>Imprimir QR</button></td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+{% block main %}
+<!-- Header -->
+  <header class="bg-card border-b border-border">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-semibold text-white">Control de Personal</h1>
+            <p class="text-sm text-muted">Gestion de empleados</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-muted hidden sm:block">Total: <span class="text-primary font-medium">3 empleados</span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-users-page>
+    
+    <!-- Page Title -->
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-white">Listado de Empleados</h2>
+      <p class="mt-1">Visualiza y gestiona los codigos QR de cada empleado</p>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-card rounded-xl border border-border overflow-hidden shadow-xl">
+      
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-background/50 border-b border-border">
+              <th class="px-6 py-4 text-left text-xs font-semibold  uppercase tracking-wider">Empleado</th>
+              <th class="px-6 py-4 text-left text-xs font-semibold  uppercase tracking-wider">Email</th>
+              <th class="px-6 py-4 text-center text-xs font-semibold  uppercase tracking-wider">Codigo QR</th>
+              <th class="px-6 py-4 text-center text-xs font-semibold  uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable" class="divide-y divide-border">
+            {% for user in data.pieces %}
+              <tr class="table-row opacity-0 hover:bg-background/30 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span class="text-primary font-semibold text-sm">{{ user.title | first }}</span>
+                  </div>
+                  <div>
+                    <p class="font-medium text-white">{{ user.title }}</p>
+                    <p class="text-sm">ID: {{ user._id }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="text-gray-300">{{ user.email }}</span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex justify-center">
+                  <div data-id="{{ user._id }}" data-qr class="w-16 h-16 qr-placeholder rounded-lg border border-border"></div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex justify-center">
+                  <button data-print-qr class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-all font-medium text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Imprimir
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer -->
+      <div class="bg-background/30 px-6 py-4 border-t border-border">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p class="text-sm">Mostrando <span class="text-white font-medium">3</span> de <span class="text-white font-medium">3</span> empleados</p>
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-1.5 text-sm bg-card border border-border rounded-lg hover:bg-background/50 transition-colors disabled:opacity-50" disabled>
+              Anterior
+            </button>
+            <span class="px-3 py-1.5 text-sm bg-primary/20 text-primary border border-primary/30 rounded-lg font-medium">1</span>
+            <button class="px-3 py-1.5 text-sm bg-card border border-border rounded-lg hover:bg-background/50 transition-colors disabled:opacity-50" disabled>
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-border mt-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <p class="text-center text-sm text-muted">Sistema de Control de Personal v1.0</p>
+    </div>
+  </footer>
 {% endblock %}
