@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<div class="container py-5" data-users-page>
+  <h3 class="mb-4">Listado de empleados</h3>
+
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>QR</th>
+      </tr>
+    </thead>
+    <tbody id="usersTable">
+      {% for user in data.pieces %}
+        <tr>
+          <td>{{ user.title }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <div data-id="{{ user._id }}" data-qr></div>
+          </td>
+          <td><button class="btn btn-primary" data-print-qr>Imprimir QR</button></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -35,8 +35,8 @@ apostrophe({
     '@apostrophecms/vite': {},
     // The project's first custom page type.
     'default-page': {},
-    'time-tracking-page': {},
-    'user-page': {},
-    'time-entry': {}
+    '@apostrophecms/user-page': {},
+    'time-entry': {},
+    'qr-page': {}
   }
 });

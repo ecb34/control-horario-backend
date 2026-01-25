@@ -44,7 +44,9 @@
     "cross-env": "^10.1.0",
     "html5-qrcode": "^2.3.8",
     "jquery": "^4.0.0",
-    "normalize.css": "^8.0.1"
+    "normalize.css": "^8.0.1",
+    "qrcode": "^1.5.4",
+    "sweetalert2": "^11.26.17"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",

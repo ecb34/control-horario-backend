@@ -13,7 +13,7 @@ export default {
       },
       _user: {
         type: 'relationship',
-        label: 'User',
+        label: 'Usuario',
         withType: '@apostrophecms/user',
         required: true,
         storageIds: 'userIds',
@@ -21,29 +21,59 @@ export default {
       },
       eventType: {
         type: 'select',
-        label: 'Event Type',
+        label: 'Tipo de evento',
         required: true,
         choices: [
           {
-            label: 'Clock in',
+            label: 'Entrada',
             value: 'clockIn'
           },
           {
-            label: 'Clock out',
+            label: 'Salida',
             value: 'clockOut'
           },
           {
-            label: 'Break Start',
+            label: 'Inicio de descanso',
             value: 'breakStart'
           },
           {
-            label: 'Break End',
+            label: 'Fin de descanso',
             value: 'breakEnd'
           }
         ]
+      },
+      _createdBy: {
+        type: 'relationship',
+        label: 'Creado por',
+        withType: '@apostrophecms/user',
+        storageIds: 'createdByIds',
+        max: 1
+      },
+      _updatedBy: {
+        type: 'relationship',
+        label: 'Modificado por',
+        withType: '@apostrophecms/user',
+        storageIds: 'updatedByIds',
+        max: 1
       }
     },
-    group: {}
+    group: {
+      basic: {
+        label: 'Básico',
+        fields: [ 'timestamp', '_user', 'eventType' ]
+      },
+      metadata: {
+        label: 'Metadatos',
+        fields: [ '_createdBy', '_updatedBy' ]
+      }
+    }
+  },
+  columns: {
+    add: {
+      eventType: {
+        label: 'Tipo de evento'
+      }
+    }
   },
   methods(self) {
     return {
@@ -93,7 +123,25 @@ export default {
       }
     };
   },
-
+  handlers(self) {
+    return {
+      beforeInsert: {
+        assignTitle(req, piece) {
+          piece.title = `${piece._user[0].title} - ${piece.timestamp}`;
+        },
+        addCreatedBy(req, piece) {
+          if (req.user != null && piece._createdBy == null) {
+            piece._createdBy = [ req.user ];
+          }
+        }
+      },
+      beforeUpdate: {
+        addUpdatedBy(req, piece) {
+          piece._updatedBy = [ req.user ];
+        }
+      }
+    };
+  },
   apiRoutes(self) {
     return {
       post: {
@@ -111,28 +159,38 @@ export default {
             const timeEntry = self.newInstance();
             timeEntry.timestamp = new Date().toISOString();
             timeEntry.eventType = 'clockIn';
-            timeEntry.userIds = [ employeeId ];
+            timeEntry._user = [ user ];
+            timeEntry._createdBy = [ user ];
 
             await self.insert(req, timeEntry, { permissions: false });
 
             return {
               status: 'workStarted',
-              fullName: `${user.firstName} ${user.lastName}`
+              fullName: user.title
             };
           }
 
-          if (isUserWorkingNow && [ 'clockOut', 'breakStart', 'breakEnd' ].includes(eventType)) {
-            const timeEntry = self.newInstance();
-            timeEntry.timestamp = new Date().toISOString();
-            timeEntry.eventType = eventType;
-            timeEntry.userIds = [ employeeId ];
+          if (isUserWorkingNow) {
+            if (eventType == null) {
+              return {
+                status: 'workInProgress',
+                fullName: user.title
+              };
+            } else if ([ 'clockOut', 'breakStart', 'breakEnd' ].includes(eventType)) {
+              const timeEntry = self.newInstance();
+              timeEntry.timestamp = new Date().toISOString();
+              timeEntry.eventType = eventType;
+              timeEntry._user = [ user ];
+              timeEntry._createdBy = [ user ];
 
-            await self.insert(req, timeEntry, { permissions: false });
+              await self.insert(req, timeEntry, { permissions: false });
 
-            return {
-              status: 'entryRecorded',
-              fullName: `${user.firstName} ${user.lastName}`
-            };
+              return {
+                status: 'entryRecorded',
+                fullName: user.title
+              };
+            }
+
           }
 
           throw self.apos.error('invalid event type');

@@ -10,11 +10,11 @@ export default {
         label: 'Home'
       },
       {
-        name: 'time-tracking-page',
-        label: 'Time Tracking'
+        name: 'qr-page',
+        label: 'QR Scanner'
       },
       {
-        name: 'user-page',
+        name: '@apostrophecms/user-page',
         label: 'Users'
       }
     ]
