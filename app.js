@@ -39,7 +39,6 @@ apostrophe({
     'time-entry': {},
     'qr-page': {},
     'time-tracking-page': {},
-    'fichajes-resumen-page': {},
     '@apostrophecms/import-export': {}
   }
 });

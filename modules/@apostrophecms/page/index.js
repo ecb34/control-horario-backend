@@ -15,10 +15,6 @@ export default {
       },
       {
         name: 'time-tracking-page',
-        label: 'Time Tracking'
-      },
-      {
-        name: 'fichajes-resumen-page',
         label: 'Resumen de Fichajes'
       },
       {
