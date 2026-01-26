@@ -19,7 +19,7 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-sm text-muted hidden sm:block">Total: <span class="text-primary font-medium">3 empleados</span></span>
+          <span class="text-sm text-muted hidden sm:block">Total: <span class="text-primary font-medium">{{ data.pieces.length }} empleados</span></span>
         </div>
       </div>
     </div>
@@ -89,7 +89,7 @@
       <!-- Table Footer -->
       <div class="bg-background/30 px-6 py-4 border-t border-border">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p class="text-sm">Mostrando <span class="text-white font-medium">3</span> de <span class="text-white font-medium">3</span> empleados</p>
+          <p class="text-sm">Mostrando <span class="text-white font-medium">{{ data.pieces.length }}</span> de <span class="text-white font-medium">{{ data.pieces.length }}</span> empleados</p>
           <div class="flex items-center gap-2">
             <button class="px-3 py-1.5 text-sm bg-card border border-border rounded-lg hover:bg-background/50 transition-colors disabled:opacity-50" disabled>
               Anterior
