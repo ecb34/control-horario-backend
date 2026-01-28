@@ -133,13 +133,13 @@ export default () => {
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-background font-bold text-sm">JD</div>
+                  <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-background font-bold text-sm">${fichaje.usuario?.charAt(0) || 'U'}</div>
                   <span class="text-white">${fichaje.usuario || '-'}</span>
                 </div>
               </td>
               <td class="px-6 py-4">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-success/20 text-success">
-                  ${fichaje.totalHoras || '0h 0m'}
+                  ${fichaje.totalHoras || '-'}
                 </span>
               </td>
               <td class="px-6 py-4">
@@ -237,7 +237,7 @@ export default () => {
             });
           })
           .then(result => {
-            if (result.ok && window.Swal) {
+            if (result.ok) {
               Swal.fire('¡Éxito!', result.data.message || 'Fichaje creado correctamente', 'success');
               document.getElementById('modal-nuevo-fichaje').style.display = 'none';
               document.getElementById('form-nuevo-fichaje').reset();
