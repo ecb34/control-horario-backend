@@ -152,8 +152,8 @@ export default () => {
               </td>
               <td class="px-6 py-4 text-center">
                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-full ${fichaje.completada ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'}">
-                  <svg class="w-5 h-5 ${fichaje.completada ? 'text-success' : 'text-warning'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${fichaje.completada ? 'M5 13l4 4L19 7' : 'M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'}"/>
                   </svg>
                 </span>
               </td>
@@ -253,9 +253,28 @@ export default () => {
 
       // Descargar PDF
       document.getElementById('btn-descargar-pdf')?.addEventListener('click', () => {
-        if (window.Swal) {
-          Swal.fire('En desarrollo', 'La funcionalidad de exportar a PDF estará disponible próximamente', 'info');
+        const params = new URLSearchParams();
+        if (state.filtros.empleado) {
+          params.append('empleado', state.filtros.empleado);
         }
+        if (state.filtros.fechaInicio) {
+          params.append('desde', state.filtros.fechaInicio);
+        }
+        if (state.filtros.fechaFin) {
+          params.append('hasta', state.filtros.fechaFin);
+        }
+
+        const url = `/api/v1/time-entry/pdf-resumen?${params.toString()}`;
+
+        // Crear un elemento <a> temporal para descargar el PDF
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `resumen-fichajes-${new Date().getTime()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        Swal.fire('¡Éxito!', 'El PDF se está descargando...', 'success');
       });
     }
   });

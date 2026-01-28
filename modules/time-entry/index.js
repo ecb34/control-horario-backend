@@ -1,3 +1,5 @@
+import PDFDocument from 'pdfkit';
+
 export default {
   extend: '@apostrophecms/piece-type',
   options: {
@@ -151,6 +153,152 @@ export default {
           .toArray();
 
         return breakStarts.length > breakEnds.length;
+      },
+      async procesarResumen(req, empleado, desde, hasta) {
+        const query = {};
+
+        if (empleado) {
+          query['userIds.0'] = empleado;
+        }
+
+        if (desde || hasta) {
+          query.timestamp = {};
+          if (desde) {
+            const fechaInicio = new Date(desde);
+            fechaInicio.setHours(0, 0, 0, 0);
+            query.timestamp.$gte = fechaInicio.toISOString();
+          }
+          if (hasta) {
+            const fechaFin = new Date(hasta);
+            fechaFin.setHours(23, 59, 59, 999);
+            query.timestamp.$lte = fechaFin.toISOString();
+          }
+        }
+
+        const fichajes = await self.find(req, query)
+          .relationships([ '_user' ])
+          .sort({ timestamp: 1 })
+          .toArray();
+
+        const resumenPorDia = {};
+
+        fichajes.forEach(fichaje => {
+          const fecha = fichaje.timestamp.split('T')[0];
+          const userId = fichaje.userIds[0];
+          const usuario = fichaje._user[0];
+          const key = `${fecha}_${userId}`;
+
+          if (!resumenPorDia[key]) {
+            resumenPorDia[key] = {
+              fecha,
+              usuario: usuario.title,
+              usuarioId: userId,
+              eventos: []
+            };
+          }
+
+          resumenPorDia[key].eventos.push({
+            tipo: fichaje.eventType,
+            hora: fichaje.timestamp
+          });
+        });
+
+        const resultado = [];
+
+        Object.values(resumenPorDia).forEach(dia => {
+          const jornadas = [];
+          let jornadaActual = null;
+          let descansoActual = null;
+
+          dia.eventos.forEach(evento => {
+            if (evento.tipo === 'clockIn') {
+              if (jornadaActual === null) {
+                jornadaActual = {
+                  inicio: evento.hora,
+                  fin: null,
+                  descansos: []
+                };
+              }
+            } else if (evento.tipo === 'clockOut') {
+              if (jornadaActual !== null) {
+                jornadaActual.fin = evento.hora;
+                jornadas.push(jornadaActual);
+                jornadaActual = null;
+              }
+            } else if (evento.tipo === 'breakStart') {
+              descansoActual = {
+                inicio: evento.hora,
+                fin: null
+              };
+            } else if (evento.tipo === 'breakEnd') {
+              if (descansoActual !== null) {
+                descansoActual.fin = evento.hora;
+                if (jornadaActual !== null) {
+                  jornadaActual.descansos.push(descansoActual);
+                }
+                descansoActual = null;
+              }
+            }
+          });
+
+          if (jornadaActual !== null) {
+            jornadas.push(jornadaActual);
+          }
+
+          let totalMinutosDia = 0;
+          const horarios = [];
+          let tieneIncidencia = false;
+
+          jornadas.forEach((jornada) => {
+            let totalMinutosJornada = 0;
+
+            if (jornada.inicio && jornada.fin) {
+              const inicio = new Date(jornada.inicio);
+              const fin = new Date(jornada.fin);
+              const diferencia = (fin - inicio) / 1000 / 60;
+              totalMinutosJornada = Math.floor(diferencia);
+
+              jornada.descansos.forEach(descanso => {
+                if (descanso.inicio && descanso.fin) {
+                  const inicioDesc = new Date(descanso.inicio);
+                  const finDesc = new Date(descanso.fin);
+                  const difDesc = (finDesc - inicioDesc) / 1000 / 60;
+                  totalMinutosJornada -= Math.floor(difDesc);
+                }
+              });
+
+              const horas = Math.floor(totalMinutosJornada / 60);
+              const minutos = totalMinutosJornada % 60;
+              const horaInicio = inicio.toTimeString().slice(0, 5);
+              const horaFin = fin.toTimeString().slice(0, 5);
+              horarios.push(
+                `${horaInicio}-${horaFin} (${horas}h ${minutos}min)`
+              );
+              totalMinutosDia += totalMinutosJornada;
+            } else if (jornada.inicio && !jornada.fin) {
+              const inicio = new Date(jornada.inicio);
+              const horaInicio = inicio.toTimeString().slice(0, 5);
+              horarios.push(`${horaInicio}-Pendiente`);
+              tieneIncidencia = true;
+            }
+          });
+
+          const horasDia = Math.floor(totalMinutosDia / 60);
+          const minutosDia = totalMinutosDia % 60;
+
+          resultado.push({
+            fecha: dia.fecha,
+            usuario: dia.usuario,
+            usuarioId: dia.usuarioId,
+            totalHoras: `${horasDia}h ${minutosDia}min`,
+            horario: horarios.join(' | ') || 'Sin registros',
+            jornadas: jornadas.length,
+            completada: !tieneIncidencia,
+            estado: tieneIncidencia ? 'incidencia' : 'normal'
+          });
+        });
+
+        return resultado;
       }
     };
   },
@@ -196,140 +344,7 @@ export default {
             empleado, desde, hasta
           } = req.query;
 
-          const query = {};
-
-          // Filtro por empleado
-          if (empleado) {
-            query['userIds.0'] = empleado;
-          }
-
-          // Filtro por rango de fechas
-          if (desde || hasta) {
-            query.timestamp = {};
-            if (desde) {
-              const fechaInicio = new Date(desde);
-              fechaInicio.setHours(0, 0, 0, 0);
-              query.timestamp.$gte = fechaInicio.toISOString();
-            }
-            if (hasta) {
-              const fechaFin = new Date(hasta);
-              fechaFin.setHours(23, 59, 59, 999);
-              query.timestamp.$lte = fechaFin.toISOString();
-            }
-          }
-
-          // Obtener todos los fichajes
-          const fichajes = await self.find(req, query)
-            .relationships([ '_user' ])
-            .sort({ timestamp: -1 })
-            .toArray();
-
-          // Agrupar por fecha y usuario
-          const resumen = {};
-
-          fichajes.forEach(fichaje => {
-            const fecha = fichaje.timestamp.split('T')[0];
-            const userId = fichaje.userIds[0];
-            const usuario = fichaje._user[0];
-            const key = `${fecha}_${userId}`;
-
-            if (!resumen[key]) {
-              resumen[key] = {
-                fecha,
-                usuario: usuario.title,
-                usuarioId: userId,
-                eventos: [],
-                clockIn: null,
-                clockOut: null,
-                breaks: []
-              };
-            }
-
-            resumen[key].eventos.push({
-              tipo: fichaje.eventType,
-              hora: fichaje.timestamp
-            });
-
-            if (fichaje.eventType === 'clockIn' && !resumen[key].clockIn) {
-              resumen[key].clockIn = fichaje.timestamp;
-            }
-            if (fichaje.eventType === 'clockOut' && !resumen[key].clockOut) {
-              resumen[key].clockOut = fichaje.timestamp;
-            }
-            if (fichaje.eventType === 'breakStart' || fichaje.eventType === 'breakEnd') {
-              resumen[key].breaks.push({
-                tipo: fichaje.eventType,
-                hora: fichaje.timestamp
-              });
-            }
-          });
-
-          // Calcular totales y formatear
-          const resultado = Object.values(resumen).map(dia => {
-            let totalMinutos = 0;
-            let horario = '';
-            let completada = false;
-            let estado = 'normal';
-
-            if (dia.clockIn && dia.clockOut) {
-              const inicio = new Date(dia.clockIn);
-              const fin = new Date(dia.clockOut);
-              totalMinutos = Math.floor((fin - inicio) / 1000 / 60);
-
-              // Restar tiempo de descansos
-              for (let i = 0; i < dia.breaks.length; i += 2) {
-                if (dia.breaks[i] && dia.breaks[i + 1]) {
-                  const breakStart = new Date(dia.breaks[i].hora);
-                  const breakEnd = new Date(dia.breaks[i + 1].hora);
-                  totalMinutos -= Math.floor((breakEnd - breakStart) / 1000 / 60);
-                }
-              }
-
-              const horas = Math.floor(totalMinutos / 60);
-              const minutos = totalMinutos % 60;
-
-              horario = `Desde: ${inicio.toTimeString().slice(0, 5)}. Hasta: ${fin.toTimeString().slice(0, 5)}.`;
-              completada = true; // Jornada completa si >= 8 horas
-
-              return {
-                fecha: dia.fecha,
-                usuario: dia.usuario,
-                usuarioId: dia.usuarioId,
-                totalHoras: `${horas}h ${minutos}min`,
-                horario,
-                completada,
-                estado: completada ? 'normal' : 'incidencia'
-              };
-            } else if (dia.clockIn && !dia.clockOut) {
-              // Entrada sin salida - incidencia
-              const inicio = new Date(dia.clockIn);
-              horario = `Desde: ${inicio.toTimeString().slice(0, 5)}. Pendiente de salida.`;
-              estado = 'incidencia';
-
-              return {
-                fecha: dia.fecha,
-                usuario: dia.usuario,
-                usuarioId: dia.usuarioId,
-                totalHoras: '-',
-                horario,
-                completada: false,
-                estado
-              };
-            } else {
-              // Sin fichajes - podría ser festivo
-              return {
-                fecha: dia.fecha,
-                usuario: dia.usuario,
-                usuarioId: dia.usuarioId,
-                totalHoras: '0h 0min',
-                horario: 'Sin registros',
-                completada: false,
-                estado: 'incidencia'
-              };
-            }
-          });
-
-          return resultado;
+          return await self.procesarResumen(req, empleado, desde, hasta);
         }
       },
       post: {
@@ -426,6 +441,136 @@ export default {
           }
 
           throw self.apos.error('invalid event type');
+        }
+      }
+    };
+  },
+  routes(self) {
+    return {
+      get: {
+        // GET /api/v1/time-entry/pdf-resumen?empleado=ID&desde=DATE&hasta=DATE
+        async 'pdf-resumen'(req) {
+          try {
+            const {
+              empleado, desde, hasta
+            } = req.query;
+
+            const resultado = await self.procesarResumen(req, empleado, desde, hasta);
+
+            const doc = new PDFDocument({
+              margin: 40,
+              size: 'A4'
+            });
+
+            req.res.setHeader('Content-Type', 'application/pdf');
+            const timestamp = Date.now();
+            req.res.setHeader(
+              'Content-Disposition',
+              `attachment; filename="resumen-fichajes-${timestamp}.pdf"`
+            );
+
+            doc.pipe(req.res);
+
+            doc.fontSize(20).font('Helvetica-Bold')
+              .text('Resumen de Fichajes', { align: 'center' });
+            doc.moveDown(0.3);
+
+            const fechaActual = new Date();
+            const desdeStr = desde
+              ? new Date(desde).toLocaleDateString('es-ES')
+              : 'Inicio';
+            const hastaStr = hasta
+              ? new Date(hasta).toLocaleDateString('es-ES')
+              : 'Hoy';
+
+            doc.fontSize(10).font('Helvetica');
+            doc.text(
+              `Período: ${desdeStr} al ${hastaStr}`,
+              { align: 'center' }
+            );
+            if (empleado && resultado.length > 0) {
+              doc.text(`Empleado: ${resultado[0].usuario}`, { align: 'center' });
+            }
+            doc.text(
+              `Generado: ${fechaActual.toLocaleDateString('es-ES')} 
+                ${fechaActual.toLocaleTimeString('es-ES')}`,
+              { align: 'center' }
+            );
+            doc.moveDown(0.8);
+
+            if (resultado.length > 0) {
+              const colWidth = 130;
+              const colX1 = 40;
+              const colX2 = colX1 + colWidth;
+              const colX3 = colX2 + colWidth;
+              const colX4 = colX3 + colWidth;
+              const rowHeight = 20;
+              let yPos = doc.y;
+
+              doc.fontSize(9).font('Helvetica-Bold');
+              doc.rect(colX1, yPos, colWidth, rowHeight).stroke();
+              doc.text('Fecha', colX1 + 5, yPos + 4, { width: colWidth - 10 });
+
+              doc.rect(colX2, yPos, colWidth, rowHeight).stroke();
+              doc.text('Usuario', colX2 + 5, yPos + 4, { width: colWidth - 10 });
+
+              doc.rect(colX3, yPos, colWidth, rowHeight).stroke();
+              doc.text('Total Horas', colX3 + 5, yPos + 4, { width: colWidth - 10 });
+
+              doc.rect(colX4, yPos, colWidth, rowHeight).stroke();
+              doc.text('Estado', colX4 + 5, yPos + 4, { width: colWidth - 10 });
+
+              yPos += rowHeight;
+              doc.fontSize(8).font('Helvetica');
+
+              resultado.forEach((row) => {
+                if (yPos > 700) {
+                  doc.addPage();
+                  yPos = 40;
+                }
+
+                doc.rect(colX1, yPos, colWidth, rowHeight).stroke();
+                doc.text(row.fecha, colX1 + 5, yPos + 4, {
+                  width: colWidth - 10
+                });
+
+                doc.rect(colX2, yPos, colWidth, rowHeight).stroke();
+                const usuario = row.usuario.substring(0, 25);
+                doc.text(usuario, colX2 + 5, yPos + 4, { width: colWidth - 10 });
+
+                doc.rect(colX3, yPos, colWidth, rowHeight).stroke();
+                doc.text(row.totalHoras, colX3 + 5, yPos + 4, {
+                  width: colWidth - 10
+                });
+
+                doc.rect(colX4, yPos, colWidth, rowHeight).stroke();
+                doc.text(row.estado.toUpperCase(), colX4 + 5, yPos + 4, {
+                  width: colWidth - 10
+                });
+
+                yPos += rowHeight;
+              });
+            } else {
+              doc.fontSize(11).text(
+                'No hay datos para el período seleccionado.',
+                { align: 'center' }
+              );
+            }
+
+            doc.moveDown(2);
+            doc.fontSize(7).text(
+              'Generado automáticamente por el sistema.',
+              { align: 'center' }
+            );
+
+            doc.end();
+          } catch (error) {
+            console.error('Error en pdf-resumen:', error);
+            return {
+              error: 'Error al generar PDF',
+              message: error.message
+            };
+          }
         }
       }
     };
