@@ -1,0 +1,183 @@
+
+{% extends "layout.html" %}
+
+{% block bodyClass %}bg-background min-h-screen text-white{% endblock bodyClass %}
+
+{% block main %}
+  <!-- Header -->
+  <header class="bg-card border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white">Resumen de Fichajes</h1>
+            <p class="text-sm text-muted">Control y seguimiento de horarios</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="btn-descargar-pdf" class="flex items-center gap-2 bg-danger hover:bg-red-600 text-white px-4 py-2.5 rounded-lg font-medium transition-all duration-200 hover:scale-105">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="hidden sm:inline">Descargar PDF</span>
+          </button>
+          <button id="btn-nuevo-fichaje" class="flex items-center gap-2 bg-primary hover:bg-primary-hover text-background px-4 py-2.5 rounded-lg font-medium transition-all duration-200 hover:scale-105">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span class="hidden sm:inline">Nuevo Fichaje</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Filtros -->
+    <div class="bg-card rounded-xl border border-border p-6 mb-6 animate-fade-in">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+        </svg>
+        <h2 class="text-lg font-semibold text-white">Filtros de Busqueda</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="filtro-empleado" class="block text-sm font-medium text-muted mb-2">Empleado</label>
+          <select id="filtro-empleado" class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+            <option value="">Todos los empleados</option>
+          </select>
+        </div>
+        
+        <div>
+          <label for="filtro-fecha-inicio" class="block text-sm font-medium text-muted mb-2">Fecha de inicio</label>
+          <input type="date" id="filtro-fecha-inicio" class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+        </div>
+        
+        <div>
+          <label for="filtro-fecha-fin" class="block text-sm font-medium text-muted mb-2">Fecha de fin</label>
+          <input type="date" id="filtro-fecha-fin" class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+        </div>
+      </div>
+      
+      <div class="flex justify-end mt-4">
+        <button id="btn-aplicar-filtros" class="flex items-center gap-2 bg-success hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 hover:scale-105">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla de Resultados -->
+    <div class="bg-card rounded-xl border border-border overflow-hidden animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="overflow-x-auto">
+        <table id="tabla-fichajes" class="w-full">
+          <thead>
+            <tr class="bg-background/50">
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-primary transition-colors" data-sort="fecha">
+                <div class="flex items-center gap-2">
+                  Fecha
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                  </svg>
+                </div>
+              </th>
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-primary transition-colors" data-sort="usuario">
+                <div class="flex items-center gap-2">
+                  Usuario
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                  </svg>
+                </div>
+              </th>
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider cursor-pointer hover:text-primary transition-colors" data-sort="total">
+                <div class="flex items-center gap-2">
+                  Total en Horas
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                  </svg>
+                </div>
+              </th>
+              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">
+                Horario
+              </th>
+              <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider">
+                Jornada Completada
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tabla-fichajes-body" class="divide-y divide-border">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Nuevo Fichaje -->
+  <div id="modal-nuevo-fichaje" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-card border border-border rounded-2xl w-full max-w-md shadow-2xl animate-fade-in">
+      <div class="flex items-center justify-between p-6 border-b border-border">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-white">Nuevo Fichaje Manual</h2>
+        </div>
+        <button id="modal-close" class="w-8 h-8 rounded-lg bg-background hover:bg-danger/20 flex items-center justify-center transition-colors group">
+          <svg class="w-5 h-5 text-muted group-hover:text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-nuevo-fichaje" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-muted mb-2">Empleado</label>
+          <select id="modal-empleado" required class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+            <option value="">Seleccionar empleado...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-muted mb-2">Fecha</label>
+          <input type="date" id="modal-fecha" required class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-muted mb-2">Tipo de Evento</label>
+          <select id="modal-tipo-evento" required class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+            <option value="clockIn">Entrada</option>
+            <option value="clockOut">Salida</option>
+            <option value="breakStart">Inicio Descanso</option>
+            <option value="breakEnd">Fin Descanso</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-muted mb-2">Hora</label>
+          <input type="time" id="modal-hora" required class="w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button type="button" id="modal-cancelar" class="flex-1 px-4 py-3 rounded-lg border border-border bg-card hover:bg-background text-white font-medium transition-all">
+            Cancelar
+          </button>
+          <button type="submit" class="flex-1 px-4 py-3 rounded-lg bg-primary hover:bg-primary-hover text-background font-medium transition-all hover:scale-[1.02]">
+            Crear Fichaje
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock main %}
